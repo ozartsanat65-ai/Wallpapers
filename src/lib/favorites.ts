@@ -1,23 +1,24 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
 const STORAGE_KEY = 'terraview_favorites';
 
-export function getFavorites(): string[] {
+export async function getFavorites(): Promise<string[]> {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    return raw ? JSON.parse(raw) : [];
+    const raw = await AsyncStorage.getItem(STORAGE_KEY);
+    const parsed: unknown = raw ? JSON.parse(raw) : [];
+    return Array.isArray(parsed) && parsed.every((value) => typeof value === 'string')
+      ? parsed
+      : [];
   } catch {
     return [];
   }
 }
 
-export function toggleFavorite(id: string): string[] {
-  const current = getFavorites();
+export async function toggleFavorite(id: string): Promise<string[]> {
+  const current = await getFavorites();
   const updated = current.includes(id)
-    ? current.filter((f) => f !== id)
+    ? current.filter((favoriteId) => favoriteId !== id)
     : [...current, id];
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+  await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
   return updated;
-}
-
-export function isFavorite(id: string): boolean {
-  return getFavorites().includes(id);
 }

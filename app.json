@@ -1,0 +1,20 @@
+{
+  "expo": {
+    "name": "TerraView",
+    "slug": "terraview",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "scheme": "terraview",
+    "userInterfaceStyle": "dark",
+    "newArchEnabled": true,
+    "plugins": ["expo-router"],
+    "android": {
+      "package": "com.wallpapersapp"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "replace-with-your-eas-project-id"
+      }
+    }
+  }
+}
