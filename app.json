@@ -9,7 +9,11 @@
     "newArchEnabled": true,
     "plugins": ["expo-router"],
     "android": {
-      "package": "com.wallpapersapp"
+      "package": "com.terraview.app"
+    },
+    "ios": {
+      "bundleIdentifier": "com.terraview.app",
+      "supportsTablet": false
     },
     "extra": {
       "eas": {
