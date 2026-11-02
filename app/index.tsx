@@ -19,7 +19,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { getFavorites, toggleFavorite } from '../src/lib/favorites';
-import { getWallpaperImageUrl, supabase, type Wallpaper } from '../src/lib/supabase';
+import { getWallpaperImageUrl, isSupabaseConfigured, supabase, type Wallpaper } from '../src/lib/supabase';
 
 type Tab = 'explore' | 'categories' | 'favorites' | 'admin';
 type Filter = 'all' | 'favorites' | string;
@@ -217,8 +217,12 @@ export default function HomeScreen() {
 
   const loadWallpapers = useCallback(async (refresh = false) => {
     if (refresh) setRefreshing(true); else setLoading(true);
-    const { data, error: queryError } = await supabase.from('wallpapers').select('*').order('created_at', { ascending: false });
-    if (queryError) setError(queryError.message); else { setWallpapers((data as Wallpaper[]) || []); setError(null); }
+    if (!isSupabaseConfigured) {
+      setError('Veritabanı bağlantısı yapılandırılmamış.');
+    } else {
+      const { data, error: queryError } = await supabase.from('wallpapers').select('*').order('created_at', { ascending: false });
+      if (queryError) setError(queryError.message); else { setWallpapers((data as Wallpaper[]) || []); setError(null); }
+    }
     if (refresh) setRefreshing(false); else setLoading(false);
   }, []);
 

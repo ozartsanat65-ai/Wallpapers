@@ -7,18 +7,20 @@ const extra = Constants.expoConfig?.extra ?? {};
 const supabaseUrl: string | undefined = extra.supabaseUrl;
 const supabaseAnonKey: string | undefined = extra.supabaseAnonKey;
 
-if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error('Supabase bağlantısı yapılandırılmamış');
-}
+export const isSupabaseConfigured = Boolean(supabaseUrl && supabaseAnonKey);
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-  auth: {
-    storage: AsyncStorage,
-    autoRefreshToken: true,
-    persistSession: true,
-    detectSessionInUrl: false,
-  },
-});
+export const supabase = createClient(
+  supabaseUrl || 'https://not-configured.invalid',
+  supabaseAnonKey || 'not-configured',
+  {
+    auth: {
+      storage: AsyncStorage,
+      autoRefreshToken: true,
+      persistSession: true,
+      detectSessionInUrl: false,
+    },
+  }
+);
 
 export type Wallpaper = {
   id: string;
