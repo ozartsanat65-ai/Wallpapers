@@ -18,8 +18,8 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { getFavorites, toggleFavorite } from '@/lib/favorites';
-import { getWallpaperImageUrl, supabase, type Wallpaper } from '@/lib/supabase';
+import { getFavorites, toggleFavorite } from '../src/lib/favorites';
+import { getWallpaperImageUrl, supabase, type Wallpaper } from '../src/lib/supabase';
 
 type Tab = 'explore' | 'categories' | 'favorites' | 'admin';
 type Filter = 'all' | 'favorites' | string;
