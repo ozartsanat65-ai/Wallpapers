@@ -21,7 +21,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { getFavorites, toggleFavorite } from '../src/lib/favorites';
 import { getWallpaperImageUrl, isSupabaseConfigured, supabase, type Wallpaper } from '../src/lib/supabase';
 
-type Tab = 'explore' | 'categories' | 'favorites' | 'admin';
+type Tab = 'explore' | 'categories' | 'favorites';
 type Filter = 'all' | 'favorites' | string;
 type IconName = keyof typeof Ionicons.glyphMap;
 
@@ -41,9 +41,7 @@ const COLORS = {
   muted: '#94a3b8',
   brand: '#10b981',
   brandLight: '#6ee7b7',
-  danger: '#f87171',
 };
-const CATEGORIES = ['Şehir', 'Sahil', 'Doğa', 'Göl', 'Dağ', 'Genel'];
 
 function Icon({ name, color = COLORS.text, size = 20 }: { name: IconName; color?: string; size?: number }) {
   return <Ionicons name={name} color={color} size={size} />;
@@ -153,54 +151,8 @@ function DetailModal({ wallpaper, favorite, onClose, onToggleFavorite, onRefresh
   );
 }
 
-function AdminPanel({ wallpapers, onRefresh }: { wallpapers: Wallpaper[]; onRefresh: () => void }) {
-  const [visible, setVisible] = useState(false);
-  const [title, setTitle] = useState('');
-  const [city, setCity] = useState('İstanbul');
-  const [imageUrl, setImageUrl] = useState('');
-  const [category, setCategory] = useState('Genel');
-  const [saving, setSaving] = useState(false);
-
-  const addWallpaper = async () => {
-    if (!title.trim() || !imageUrl.trim()) {
-      Alert.alert('Eksik bilgi', 'Başlık ve görsel adresi gerekli.');
-      return;
-    }
-    setSaving(true);
-    const { error } = await supabase.from('wallpapers').insert({ title: title.trim(), city: city.trim(), image_url: imageUrl.trim(), category });
-    setSaving(false);
-    if (error) {
-      Alert.alert('Eklenemedi', error.message);
-      return;
-    }
-    setTitle(''); setImageUrl(''); setCategory('Genel'); setVisible(false); onRefresh();
-  };
-
-  const deleteWallpaper = (id: string) => {
-    Alert.alert('Duvar kağıdını sil', 'Bu kayıt kalıcı olarak silinecek.', [
-      { text: 'Vazgeç', style: 'cancel' },
-      { text: 'Sil', style: 'destructive', onPress: async () => { const { error } = await supabase.from('wallpapers').delete().eq('id', id); if (error) Alert.alert('Silinemedi', error.message); else onRefresh(); } },
-    ]);
-  };
-
-  return (
-    <ScrollView contentContainerStyle={styles.adminContent}>
-      <View style={styles.sectionHeader}><View><Text style={styles.sectionTitle}>Yönetim Paneli</Text><Text style={styles.sectionSubtitle}>{wallpapers.length} duvar kağıdı</Text></View><Pressable style={styles.smallButton} onPress={() => setVisible((current) => !current)}><Icon name={visible ? 'close' : 'add'} color={COLORS.background} size={18} /><Text style={styles.smallButtonText}>{visible ? 'İptal' : 'Yeni Ekle'}</Text></Pressable></View>
-      {visible ? <View style={styles.formCard}>
-        <Text style={styles.inputLabel}>Başlık</Text><TextInput value={title} onChangeText={setTitle} placeholder="Duvar kağıdı başlığı" placeholderTextColor="#64748b" style={styles.input} />
-        <Text style={styles.inputLabel}>Şehir</Text><TextInput value={city} onChangeText={setCity} placeholder="Şehir adı" placeholderTextColor="#64748b" style={styles.input} />
-        <Text style={styles.inputLabel}>Görsel adresi veya Storage yolu</Text><TextInput value={imageUrl} onChangeText={setImageUrl} placeholder="https://... veya dosya-yolu.jpg" placeholderTextColor="#64748b" autoCapitalize="none" style={styles.input} />
-        <Text style={styles.inputLabel}>Kategori</Text><ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.choiceRow}>{CATEGORIES.map((item) => <Pressable key={item} style={[styles.choice, category === item && styles.choiceActive]} onPress={() => setCategory(item)}><Text style={[styles.choiceText, category === item && styles.choiceTextActive]}>{item}</Text></Pressable>)}</ScrollView>
-        {imageUrl ? <Image source={{ uri: getWallpaperImageUrl(imageUrl) }} style={styles.formPreview} resizeMode="cover" /> : null}
-        <Pressable style={styles.primaryButton} onPress={addWallpaper} disabled={saving}>{saving ? <ActivityIndicator color={COLORS.background} /> : <><Icon name="add" color={COLORS.background} size={20} /><Text style={styles.primaryButtonText}>Duvar Kağıdı Ekle</Text></>}</Pressable>
-      </View> : null}
-      {wallpapers.map((wallpaper) => <View key={wallpaper.id} style={styles.adminRow}><Image source={{ uri: getWallpaperImageUrl(wallpaper.image_url) }} style={styles.adminThumb} /><View style={styles.adminRowInfo}><Text style={styles.adminRowTitle} numberOfLines={1}>{wallpaper.title}</Text><Text style={styles.adminRowMeta}>{wallpaper.city} · {wallpaper.category}</Text></View><Pressable style={styles.deleteButton} onPress={() => deleteWallpaper(wallpaper.id)}><Icon name="trash-outline" color={COLORS.danger} size={19} /></Pressable></View>)}
-    </ScrollView>
-  );
-}
-
 function BottomNav({ tab, onChange, favoritesCount }: { tab: Tab; onChange: (value: Tab) => void; favoritesCount: number }) {
-  const items: { key: Tab; label: string; icon: IconName }[] = [{ key: 'explore', label: 'Keşfet', icon: 'compass-outline' }, { key: 'categories', label: 'Kategoriler', icon: 'grid-outline' }, { key: 'favorites', label: 'Favoriler', icon: 'heart-outline' }, { key: 'admin', label: 'Yönetim', icon: 'shield-checkmark-outline' }];
+  const items: { key: Tab; label: string; icon: IconName }[] = [{ key: 'explore', label: 'Keşfet', icon: 'compass-outline' }, { key: 'categories', label: 'Kategoriler', icon: 'grid-outline' }, { key: 'favorites', label: 'Favoriler', icon: 'heart-outline' }];
   return <View style={styles.bottomNav}>{items.map((item) => <Pressable key={item.key} style={styles.navItem} onPress={() => onChange(item.key)}><View>{<Icon name={tab === item.key ? item.icon.replace('-outline', '') as IconName : item.icon} color={tab === item.key ? COLORS.brandLight : COLORS.muted} size={22} />}{item.key === 'favorites' && favoritesCount > 0 ? <Text style={styles.countBadge}>{favoritesCount}</Text> : null}</View><Text style={[styles.navLabel, tab === item.key && styles.navLabelActive]}>{item.label}</Text></Pressable>)}</View>;
 }
 
@@ -249,9 +201,9 @@ export default function HomeScreen() {
         <View style={styles.brandRow}><View style={styles.logo}><Icon name="leaf-outline" color={COLORS.background} size={21} /></View><Text style={styles.brand}>Terra<Text style={styles.brandAccent}>View</Text></Text></View>
         <View style={styles.searchBox}><Icon name="search" color={COLORS.muted} size={18} /><TextInput value={search} onChangeText={setSearch} placeholder="Duvar kağıdı ara..." placeholderTextColor="#64748b" style={styles.searchInput} /></View>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filters}>{[{ key: 'all', label: 'Keşfet' }, ...cities.map((city) => ({ key: city, label: city })), { key: 'favorites', label: 'Favoriler' }].map((item) => <Pressable key={item.key} style={[styles.filterPill, filter === item.key && styles.filterPillActive]} onPress={() => changeFilter(item.key)}><Text style={[styles.filterText, filter === item.key && styles.filterTextActive]}>{item.label}</Text></Pressable>)}</ScrollView>
-      </View> : <View style={styles.simpleHeader}><Text style={styles.simpleHeaderTitle}>{tab === 'categories' ? 'Kategoriler' : 'Yönetim Paneli'}</Text></View>}
+      </View> : <View style={styles.simpleHeader}><Text style={styles.simpleHeaderTitle}>Kategoriler</Text></View>}
       <View style={styles.content}>
-        {tab === 'categories' ? <ScrollView contentContainerStyle={styles.categoryContent}>{cities.map((city) => { const cover = wallpapers.find((wallpaper) => wallpaper.city === city); return <Pressable key={city} style={styles.cityCard} onPress={() => changeFilter(city)}>{cover ? <Image source={{ uri: getWallpaperImageUrl(cover.image_url) }} style={StyleSheet.absoluteFill} /> : null}<LinearGradient colors={['rgba(0,0,0,0.75)', 'rgba(0,0,0,0.25)']} style={StyleSheet.absoluteFill} /><View><Text style={styles.cityCount}>{wallpapers.filter((wallpaper) => wallpaper.city === city).length} duvar kağıdı</Text><Text style={styles.cityTitle}>{city}</Text></View></Pressable>; })}</ScrollView> : tab === 'admin' ? <AdminPanel wallpapers={wallpapers} onRefresh={() => loadWallpapers(true)} /> : loading ? <View style={styles.center}><ActivityIndicator size="large" color={COLORS.brand} /></View> : error ? <EmptyState title="Bir sorun oluştu" message={error} actionLabel="Tekrar Dene" onAction={() => loadWallpapers()} /> : displayItems.length === 0 ? <EmptyState title={tab === 'favorites' ? 'Henüz favori yok' : 'Sonuç bulunamadı'} message={tab === 'favorites' ? 'Beğendiğiniz duvar kağıtlarını kalp simgesine dokunarak kaydedin.' : 'Farklı bir arama veya filtre deneyin.'} actionLabel={tab === 'favorites' ? 'Keşfetmeye Başla' : undefined} onAction={() => { setFilter('all'); setTab('explore'); }} /> : <FlatList data={displayItems} renderItem={renderCard} keyExtractor={(item) => item.id} numColumns={2} columnWrapperStyle={styles.gridRow} contentContainerStyle={styles.gridContent} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => loadWallpapers(true)} tintColor={COLORS.brand} />} />}
+        {tab === 'categories' ? <ScrollView contentContainerStyle={styles.categoryContent}>{cities.map((city) => { const cover = wallpapers.find((wallpaper) => wallpaper.city === city); return <Pressable key={city} style={styles.cityCard} onPress={() => changeFilter(city)}>{cover ? <Image source={{ uri: getWallpaperImageUrl(cover.image_url) }} style={StyleSheet.absoluteFill} /> : null}<LinearGradient colors={['rgba(0,0,0,0.75)', 'rgba(0,0,0,0.25)']} style={StyleSheet.absoluteFill} /><View><Text style={styles.cityCount}>{wallpapers.filter((wallpaper) => wallpaper.city === city).length} duvar kağıdı</Text><Text style={styles.cityTitle}>{city}</Text></View></Pressable>; })}</ScrollView> : loading ? <View style={styles.center}><ActivityIndicator size="large" color={COLORS.brand} /></View> : error ? <EmptyState title="Bir sorun oluştu" message={error} actionLabel="Tekrar Dene" onAction={() => loadWallpapers()} /> : displayItems.length === 0 ? <EmptyState title={tab === 'favorites' ? 'Henüz favori yok' : 'Sonuç bulunamadı'} message={tab === 'favorites' ? 'Beğendiğiniz duvar kağıtlarını kalp simgesine dokunarak kaydedin.' : 'Farklı bir arama veya filtre deneyin.'} actionLabel={tab === 'favorites' ? 'Keşfetmeye Başla' : undefined} onAction={() => { setFilter('all'); setTab('explore'); }} /> : <FlatList data={displayItems} renderItem={renderCard} keyExtractor={(item) => item.id} numColumns={2} columnWrapperStyle={styles.gridRow} contentContainerStyle={styles.gridContent} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => loadWallpapers(true)} tintColor={COLORS.brand} />} />}
       </View>
       <BottomNav tab={tab} onChange={setTab} favoritesCount={favorites.length} />
       <DetailModal wallpaper={selected} favorite={selected ? favorites.includes(selected.id) : false} onClose={() => setSelected(null)} onToggleFavorite={handleFavorite} onRefresh={() => loadWallpapers(true)} />
@@ -307,27 +259,6 @@ const styles = StyleSheet.create({
   cityCard: { height: 130, borderRadius: 17, overflow: 'hidden', justifyContent: 'center', paddingHorizontal: 20, marginBottom: 12, backgroundColor: COLORS.surface },
   cityCount: { color: COLORS.brandLight, fontSize: 12, fontWeight: '700', marginBottom: 4 },
   cityTitle: { color: COLORS.text, fontSize: 26, fontWeight: '800' },
-  adminContent: { padding: 16, paddingBottom: 100 },
-  sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 17 },
-  sectionTitle: { color: COLORS.text, fontSize: 19, fontWeight: '800' },
-  sectionSubtitle: { color: COLORS.muted, fontSize: 13, marginTop: 3 },
-  smallButton: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: COLORS.brand, borderRadius: 11, paddingHorizontal: 12, paddingVertical: 10 },
-  smallButtonText: { color: COLORS.background, fontWeight: '800', fontSize: 12 },
-  formCard: { backgroundColor: COLORS.surface, borderRadius: 16, borderWidth: 1, borderColor: COLORS.border, padding: 14, marginBottom: 18 },
-  inputLabel: { color: '#cbd5e1', fontSize: 12, fontWeight: '700', marginBottom: 7, marginTop: 5 },
-  input: { backgroundColor: COLORS.surfaceStrong, borderColor: COLORS.border, borderWidth: 1, borderRadius: 11, color: COLORS.text, paddingHorizontal: 12, paddingVertical: 11, fontSize: 14, marginBottom: 10 },
-  choiceRow: { gap: 7, paddingBottom: 5 },
-  choice: { borderRadius: 15, paddingHorizontal: 11, paddingVertical: 7, backgroundColor: COLORS.surfaceStrong, borderWidth: 1, borderColor: COLORS.border },
-  choiceActive: { backgroundColor: 'rgba(16,185,129,0.16)', borderColor: COLORS.brand },
-  choiceText: { color: COLORS.muted, fontSize: 11, fontWeight: '700' },
-  choiceTextActive: { color: COLORS.brandLight },
-  formPreview: { height: 120, borderRadius: 11, marginTop: 10, backgroundColor: COLORS.surfaceStrong },
-  adminRow: { flexDirection: 'row', alignItems: 'center', backgroundColor: COLORS.surface, borderWidth: 1, borderColor: '#202d42', borderRadius: 13, padding: 9, marginBottom: 8 },
-  adminThumb: { width: 54, height: 54, borderRadius: 9, backgroundColor: COLORS.surfaceStrong },
-  adminRowInfo: { flex: 1, marginHorizontal: 10 },
-  adminRowTitle: { color: COLORS.text, fontSize: 13, fontWeight: '700' },
-  adminRowMeta: { color: COLORS.muted, fontSize: 11, marginTop: 5 },
-  deleteButton: { width: 36, height: 36, borderRadius: 9, backgroundColor: 'rgba(248,113,113,0.1)', alignItems: 'center', justifyContent: 'center' },
   modalBackdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.9)', justifyContent: 'flex-end' },
   detailSheet: { height: '94%', backgroundColor: COLORS.background, borderTopLeftRadius: 24, borderTopRightRadius: 24, overflow: 'hidden' },
   detailTopBar: { flexDirection: 'row', justifyContent: 'space-between', padding: 14, zIndex: 2 },
